@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>时光纪念册 ✨</title>
+    <style>
+        :root {
+            --glass-bg: rgba(17, 25, 40, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --accent-color: #8b5cf6;
+            --accent-glow: 0 0 15px rgba(139, 92, 246, 0.6);
+            --text-color: #e0e0e0;
+            --transition: all 0.3s ease;
+            --notebook-bg: rgba(255, 255, 255, 0.03);
+            --notebook-line: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a, #1e1b4b);
+            color: var(--text-color);
+            overflow-x: hidden;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        /* 全屏状态样式 - 彻底修复手机端UI问题 */
+        body.fullscreen {
+            padding: 0;
+            background: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        body.fullscreen .navbar,
+        body.fullscreen .sidebar,
+        body.fullscreen .music-section {
+            display: none !important;
+        }
+
+        body.fullscreen .album-preview {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            margin: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+
+        body.fullscreen .notebook {
+            width: 98vw;
+            max-width: none;
+            aspect-ratio: 2/1.3;
+            margin-bottom: 20px;
+        }
+
+        /* 玻璃拟态容器 */
+        .glass-container {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: var(--transition);
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .navbar h1 {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            background: linear-gradient(90deg, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+        }
+
+        /* 按钮核心优化 - 适配手机端尺寸 */
+        .btn {
+            padding: clamp(8px, 3vw, 12px) clamp(12px, 4vw, 24px);
+            border: none;
+            border-radius: clamp(8px, 2vw, 12px);
+            background: var(--accent-color);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--accent-glow);
+            font-size: clamp(0.8rem, 2vw, 1.1rem);
+            min-width: clamp(80px, 20vw, 120px);
+            height: auto;
+            line-height: 1.2;
+        }
+
+        .btn:disabled {
+            background: rgba(139, 92, 246, 0.3);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .btn:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
+        }
+
+        /* 主内容区 */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            padding: 20px;
+            overflow-y: visible;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .custom-file-input {
+            padding: 12px;
+            border: 2px dashed var(--glass-border);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: clamp(1rem, 2vw, 1.2rem);
+        }
+
+        .custom-file-input:hover {
+            border-color: var(--accent-color);
+            box-shadow: var(--accent-glow);
+        }
+
+        /* 缩略图横向滚动 */
+        .image-list {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            scrollbar-width: thin;
+        }
+
+        .image-list::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .image-list::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 3px;
+        }
+
+        .image-thumbnail {
+            width: clamp(60px, 15vw, 100px);
+            height: clamp(60px, 15vw, 100px);
+            border-radius: 8px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+            flex-shrink: 0;
+        }
+
+        .image-thumbnail:hover, .image-thumbnail.active {
+            transform: scale(1.05);
+            border-color: var(--accent-color);
+            box-shadow: var(--accent-glow);
+        }
+
+        /* 相册预览区 - 双页布局 */
+        .album-preview {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        /* 实体本子样式 - 核心自适应优化 */
+        .notebook {
+            width: 90%;
+            max-width: 800px;
+            aspect-ratio: 2/1.2;
+            display: flex;
+            position: relative;
+            perspective: 2000px;
+            margin-bottom: 30px;
+        }
+
+        /* 装订线 */
+        .notebook::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 5%;
+            bottom: 5%;
+            width: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-50%);
+            z-index: 5;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 双页样式 - 自适应宽高 */
+        .notebook-page {
+            width: 50%;
+            height: 100%;
+            background: var(--notebook-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--glass-shadow);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            backface-visibility: hidden;
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+        }
+
+        /* 左页 */
+        .page-left {
+            border-right: none;
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px;
+            padding: 2%;
+        }
+
+        /* 右页 */
+        .page-right {
+            border-left: none;
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px;
+            padding: 2%;
+        }
+
+        /* 纸张纹理（横线） */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: linear-gradient(var(--notebook-line) 1px, transparent 1px);
+            background-size: 100% 10%;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .page-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 空页面提示 */
+        .empty-page {
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* 翻页动画 */
+        .notebook.flipping .page-right {
+            transform: rotateY(-180deg);
+        }
+
+        /* 导航按钮容器 - 核心优化 */
+        .nav-buttons {
+            display: flex;
+            gap: clamp(8px, 2vw, 15px);
+            width: 100%;
+            justify-content: center;
+            padding: 0 10px;
+            flex-wrap: wrap;
+        }
+
+        /* 音乐控制区 */
+        .music-section {
+            position: relative;
+            bottom: 0;
+            left: 0;
+            transform: none;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px;
+            width: 100%;
+            max-width: 100%;
+            margin-top: 20px;
+        }
+
+        .music-player {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            width: 100%;
+        }
+
+        #musicPlayer {
+            display: block;
+            width: 100%;
+        }
+
+        /* 平板及以上适配 */
+        @media (min-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr 3fr;
+                height: calc(100vh - 150px);
+                display: grid;
+            }
+
+            .image-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                overflow-x: hidden;
+                overflow-y: auto;
+                max-height: 300px;
+            }
+        }
+
+        /* 手机端强制自适应 - 彻底解决显示不全和按钮溢出问题 */
+        @media (max-width: 767px) {
+            /* 核心按钮缩小 - 解决超出屏幕问题 */
+            .btn {
+                padding: 8px 12px;
+                min-width: 70px;
+                font-size: 0.8rem;
+                border-radius: 8px;
+            }
+            
+            .notebook {
+                width: 98%;
+                aspect-ratio: 2/1.5;
+            }
+            
+            .notebook::before {
+                width: 3px;
+            }
+            
+            /* 全屏状态下的手机端优化 */
+            body.fullscreen .notebook {
+                aspect-ratio: 2/1.5;
+                width: 98vw;
+            }
+            
+            .album-preview {
+                padding: 10px;
+            }
+            
+            .nav-buttons {
+                gap: 8px;
+            }
+            
+            /* 防止按钮文字换行 */
+            .btn {
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <div class="glass-container navbar">
+        <h1>时光纪念册 ✨</h1>
+        <button class="btn" id="clearAllBtn">清空纪念册</button>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <!-- 侧边栏 -->
+        <div class="glass-container sidebar">
+            <div class="upload-section">
+                <h3>添加照片</h3>
+                <label for="imageUpload" class="custom-file-input">
+                    📸 点击上传图片
+                </label>
+                <input type="file" id="imageUpload" class="file-input" accept="image/*" multiple>
+            </div>
+
+            <div class="upload-section">
+                <h3>添加背景音乐</h3>
+                <label for="musicUpload" class="custom-file-input">
+                    🎵 点击上传音乐
+                </label>
+                <input type="file" id="musicUpload" class="file-input" accept="audio/*">
+            </div>
+
+            <div>
+                <h3>照片列表</h3>
+                <div class="image-list" id="imageList">
+                    <!-- 缩略图将动态添加 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 相册预览区 -->
+        <div class="glass-container album-preview">
+            <!-- 双页本子 -->
+            <div class="notebook" id="notebook">
+                <!-- 左页 -->
+                <div class="notebook-page page-left" id="pageLeft">
+                    <div class="empty-page">上传照片填充左页 📷</div>
+                </div>
+                <!-- 右页 -->
+                <div class="notebook-page page-right" id="pageRight">
+                    <div class="empty-page">上传照片填充右页 📷</div>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn" id="prevBtn" disabled>上一页</button>
+                <button class="btn" id="fullscreenBtn">全屏查看</button>
+                <button class="btn" id="nextBtn" disabled>下一页</button>
+            </div>
+
+            <div class="glass-container music-section">
+                <span>🎵 背景音乐</span>
+                <audio id="musicPlayer" controls hidden class="music-player">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let images = JSON.parse(localStorage.getItem('albumImages')) || [];
+        let currentPageIndex = 0;
+        let isFullscreen = false;
+        const imageListEl = document.getElementById('imageList');
+        const notebookEl = document.getElementById('notebook');
+        const pageLeftEl = document.getElementById('pageLeft');
+        const pageRightEl = document.getElementById('pageRight');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const imageUpload = document.getElementById('imageUpload');
+        const musicUpload = document.getElementById('musicUpload');
+        const musicPlayer = document.getElementById('musicPlayer');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const bodyEl = document.body;
+
+        // 初始化
+        init();
+
+        function init() {
+            renderImageList();
+            renderNotebookPages();
+            updateNavButtons();
+            bindEvents();
+            // 窗口大小变化时重新渲染本子
+            window.addEventListener('resize', renderNotebookPages);
+            // 监听全屏状态变化
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+        }
+
+        // 计算总本子页数（每2张图片一页）
+        function getTotalNotebookPages() {
+            return Math.ceil(images.length / 2);
+        }
+
+        // 渲染图片列表
+        function renderImageList() {
+            imageListEl.innerHTML = '';
+            if (images.length === 0) return;
+
+            images.forEach((src, index) => {
+                const imgEl = document.createElement('img');
+                imgEl.src = src;
+                imgEl.alt = `照片 ${index + 1}`;
+                imgEl.className = `image-thumbnail ${isCurrentPageImage(index) ? 'active' : ''}`;
+                imgEl.addEventListener('click', () => {
+                    // 点击缩略图跳转到对应本子页
+                    currentPageIndex = Math.floor(index / 2);
+                    renderNotebookPages();
+                    updateActiveThumbnail();
+                    updateNavButtons();
+                });
+                imageListEl.appendChild(imgEl);
+            });
+        }
+
+        // 判断是否为当前页图片
+        function isCurrentPageImage(index) {
+            const startIndex = currentPageIndex * 2;
+            return index >= startIndex && index < startIndex + 2;
+        }
+
+        // 渲染本子双页
+        function renderNotebookPages() {
+            const startIndex = currentPageIndex * 2;
+            const leftImage = images[startIndex];
+            const rightImage = images[startIndex + 1];
+
+            // 渲染左页
+            renderSinglePage(pageLeftEl, leftImage, startIndex);
+            // 渲染右页
+            renderSinglePage(pageRightEl, rightImage, startIndex + 1);
+
+            // 更新缩略图激活状态
+            updateActiveThumbnail();
+        }
+
+        // 渲染单页内容
+        function renderSinglePage(pageEl, imageSrc, imageIndex) {
+            if (imageSrc) {
+                // 有图片时显示图片
+                pageEl.innerHTML = `<img src="${imageSrc}" alt="照片 ${imageIndex + 1}" class="page-image">`;
+            } else {
+                // 无图片时显示空页面提示
+                pageEl.innerHTML = `<div class="empty-page">${imageIndex ? '暂无照片 📭' : '上传照片填充页面 📷'}</div>`;
+            }
+        }
+
+        // 更新导航按钮状态
+        function updateNavButtons() {
+            const totalPages = getTotalNotebookPages();
+            prevBtn.disabled = currentPageIndex === 0;
+            nextBtn.disabled = currentPageIndex >= totalPages - 1;
+            // 无图片时禁用全屏按钮
+            fullscreenBtn.disabled = images.length === 0;
+        }
+
+        // 更新激活的缩略图
+        function updateActiveThumbnail() {
+            document.querySelectorAll('.image-thumbnail').forEach((el, index) => {
+                el.classList.toggle('active', isCurrentPageImage(index));
+            });
+        }
+
+        // 翻页动画
+        function flipPage(direction) {
+            notebookEl.classList.add('flipping');
+            setTimeout(() => {
+                currentPageIndex += direction;
+                renderNotebookPages();
+                updateNavButtons();
+                notebookEl.classList.remove('flipping');
+            }, 400); // 与CSS动画时长一致
+        }
+
+        // 处理全屏状态切换 - 修复手机端全屏适配
+        function toggleFullscreen() {
+            if (!isFullscreen) {
+                // 进入全屏 - 优化手机端体验
+                if (bodyEl.requestFullscreen) {
+                    bodyEl.requestFullscreen();
+                } else if (bodyEl.webkitRequestFullscreen) {
+                    bodyEl.webkitRequestFullscreen();
+                } else if (bodyEl.mozRequestFullScreen) {
+                    bodyEl.mozRequestFullScreen();
+                } else if (bodyEl.msRequestFullscreen) {
+                    bodyEl.msRequestFullscreen();
+                }
+                // 手机端额外处理 - 确保内容居中
+                if (window.innerWidth <= 767) {
+                    bodyEl.style.display = 'flex';
+                    bodyEl.style.justifyContent = 'center';
+                    bodyEl.style.alignItems = 'center';
+                }
+            } else {
+                // 退出全屏
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+                // 恢复手机端布局
+                if (window.innerWidth <= 767) {
+                    bodyEl.style.display = '';
+                    bodyEl.style.justifyContent = '';
+                    bodyEl.style.alignItems = '';
+                }
+            }
+        }
+
+        // 监听全屏状态变化
+        function handleFullscreenChange() {
+            isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+            bodyEl.classList.toggle('fullscreen', isFullscreen);
+            fullscreenBtn.textContent = isFullscreen ? '退出全屏' : '全屏查看';
+            renderNotebookPages();
+            // 修复手机端全屏下的按钮显示
+            updateNavButtons();
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 图片上传
+            imageUpload.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (!files.length) return;
+
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        images.push(event.target.result);
+                        saveToLocalStorage();
+                        renderImageList();
+                        renderNotebookPages();
+                        updateNavButtons();
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            // 音乐上传
+            musicUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const audioUrl = URL.createObjectURL(file);
+                musicPlayer.src = audioUrl;
+                musicPlayer.hidden = false;
+            });
+
+            // 上一页
+            prevBtn.addEventListener('click', () => {
+                if (currentPageIndex > 0) {
+                    flipPage(-1);
+                }
+            });
+
+            // 下一页
+            nextBtn.addEventListener('click', () => {
+                if (currentPageIndex < getTotalNotebookPages()-1) {
+                    flipPage(1);
+                }
+            });
+
+            // 全屏切换
+            fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+            // 清空所有
+            clearAllBtn.addEventListener('click', () => {
+                if (confirm('确定要清空所有照片吗？此操作不可恢复！')) {
+                    images = [];
+                    currentPageIndex = 0;
+                    saveToLocalStorage();
+                    renderImageList();
+                    renderNotebookPages();
+                    updateNavButtons();
+                }
+            });
+
+            // 键盘导航
+            document.addEventListener('keydown', (e) => {
+                if (images.length === 0) return;
+                if (e.key === 'ArrowLeft') prevBtn.click();
+                if (e.key === 'ArrowRight') nextBtn.click();
+                // ESC键退出全屏
+                if (e.key === 'Escape' && isFullscreen) {
+                    toggleFullscreen();
+                }
+            });
+
+            // 手机端滑动翻页 - 增强触摸响应
+            let startX = 0;
+            let touchStartTime = 0;
+            notebookEl.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                touchStartTime = Date.now();
+                e.preventDefault(); // 阻止页面滚动干扰
+            }, { passive: false });
+
+            notebookEl.addEventListener('touchend', (e) => {
+                const totalPages = getTotalNotebookPages();
+                if (totalPages <= 1) return;
+
+                const endX = e.changedTouches[0].clientX;
+                const diffX = startX - endX;
+                const touchDuration = Date.now() - touchStartTime;
+                
+                // 滑动距离和时间阈值，防止误触
+                if (touchDuration < 500 && Math.abs(diffX) > 30) {
+                    if (diffX > 0) {
+                        // 向左滑动 → 下一页
+                        nextBtn.click();
+                    } else if (diffX < 0) {
+                        // 向右滑动 → 上一页
+                        prevBtn.click();
+                    }
+                }
+            });
+        }
+
+        // 保存到本地存储
+        function saveToLocalStorage() {
+            localStorage.setItem('albumImages', JSON.stringify(images));
+        }
+    </script>
+</body>
+</html>

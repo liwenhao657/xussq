@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>许愿上上签✨の友情链接</title>
+    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/66/main/result.css">
+    <style>
+        :root {
+            --glass-bg-light: rgba(255, 255, 255, 0.25);
+            --glass-border-light: rgba(255, 255, 255, 0.35);
+            --glass-shadow-light: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --glass-bg-dark: rgba(30, 30, 50, 0.45);
+            --glass-border-dark: rgba(255, 255, 255, 0.15);
+            --glass-shadow-dark: 0 8px 32px rgba(0, 0, 0, 0.35);
+            --blur-base: 12px;
+            --accent-color: #ec4899;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "寒蝉团圆体 Round", "PingFang SC", sans-serif;
+        }
+
+        /* 加载动画 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #fdf2f8 0%, #fef7fb 50%, #fcf1f7 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+
+        body.dark-mode .loading-overlay {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        .loading-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(var(--accent-color-rgb), 0.2);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            font-weight: 500;
+            letter-spacing: 2px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* 页面主体样式 */
+        body {
+            min-height: 100vh;
+            color: #333;
+            background: linear-gradient(135deg, #fdf2f8 0%, #fef7fb 50%, #fcf1f7 100%);
+            background-attachment: fixed;
+            position: relative;
+            overflow-x: hidden;
+            transition: all 0.5s ease;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+        }
+
+        .bg-mask {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-color: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(var(--blur-base));
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        body.dark-mode .bg-mask {
+            background-color: rgba(0, 0, 0, 0.45);
+        }
+
+        .bg-image {
+            position: fixed;
+            inset: 0;
+            z-index: -3;
+            background-image: url(https://pic3.zhimg.com/v2-5188eb36ca4e080f80de0a75669e7de8_r.jpg);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* 深色模式切换 */
+        .dark-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: var(--glass-bg-light);
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--glass-border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode .dark-toggle {
+            background-color: var(--glass-bg-dark);
+            border-color: var(--glass-border-dark);
+        }
+
+        /* 申请友链文字按钮样式 */
+        .apply-link-btn {
+            display: inline-block;
+            font-size: 1.2rem;
+            color: #1e88e5;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 20px auto 40px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .apply-link-btn:hover {
+            color: #1565c0;
+            border-bottom: 2px solid #1565c0;
+        }
+
+        body.dark-mode .apply-link-btn {
+            color: #64b5f6;
+        }
+
+        body.dark-mode .apply-link-btn:hover {
+            color: #90caf9;
+            border-bottom: 2px solid #90caf9;
+        }
+
+        /* 容器样式 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 页面标题 */
+        .page-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            color: var(--accent-color);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .page-title::after {
+            content: "";
+            width: 120px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 3px;
+        }
+
+        body.dark-mode .page-title {
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 友链容器 */
+        .link-wall {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 25px;
+        }
+
+        /* 友链卡片 */
+        .link-card {
+            background-color: var(--glass-bg-light);
+            backdrop-filter: blur(var(--blur-base));
+            border: 1px solid var(--glass-border-light);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: var(--glass-shadow-light);
+        }
+
+        body.dark-mode .link-card {
+            background-color: var(--glass-bg-dark);
+            border-color: var(--glass-border-dark);
+            box-shadow: var(--glass-shadow-dark);
+        }
+
+        .link-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            border-color: var(--accent-color);
+        }
+
+        body.dark-mode .link-card:hover {
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .link-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 20px;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .link-card:hover .link-avatar {
+            transform: rotate(5deg);
+            border-color: var(--accent-color);
+        }
+
+        .link-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .link-desc {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            line-height: 1.6;
+            height: 48px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        /* 页脚 */
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            opacity: 0.7;
+            font-size: 0.95rem;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode footer {
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 新增：底部导航区域 */
+        .bottom-nav {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        body.dark-mode .bottom-nav {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background-color: var(--glass-bg-light);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border-light);
+            border-radius: 25px;
+            color: inherit;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            border-color: var(--accent-color);
+            background-color: rgba(236, 72, 153, 0.1);
+        }
+
+        body.dark-mode .nav-btn {
+            background-color: var(--glass-bg-dark);
+            border-color: var(--glass-border-dark);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode .nav-btn:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            background-color: rgba(236, 72, 153, 0.2);
+        }
+
+        .nav-btn .icon {
+            font-size: 1.2rem;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 15px;
+            }
+            .page-title {
+                font-size: 2rem;
+            }
+            .link-wall {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 20px;
+            }
+            .link-avatar {
+                width: 70px;
+                height: 70px;
+            }
+            .apply-link-btn {
+                font-size: 1.1rem;
+                margin: 15px auto 30px;
+            }
+            
+            /* 移动端底部导航适配 */
+            .nav-buttons {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            
+            .nav-btn {
+                width: 200px;
+                justify-content: center;
+                padding: 10px 20px;
+                font-size: 0.95rem;
+            }
+            
+            footer {
+                margin-top: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    </script>
+   
+  
+    <!-- 加载动画 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载友链中...</div>
+    </div>
+
+    <div class="bg-image"></div>
+    <div class="bg-mask"></div>
+
+    <!-- 深色模式切换 -->
+    <div class="dark-toggle" id="darkToggle">🌙</div>
+
+    <div class="container">
+        <h1 class="page-title">✨ 友链墙 ✨</h1>
+
+        <div class="link-wall" id="linkWall">
+            <!-- 友链卡片将由 JS 动态生成 -->
+        </div>
+
+        <!-- 申请友链文字按钮 -->
+        <a href="#" class="apply-link-btn" id="applyLinkBtn">申请友链</a>
+
+        <!-- 新增：底部导航区域 -->
+        <div class="bottom-nav">
+            <div class="nav-buttons">
+                <a href="index.html" class="nav-btn">
+                    <span class="icon">🏠</span>
+                    <span>返回主页</span>
+                </a>
+                <a href="#" class="nav-btn" id="applyLinkBtnBottom">
+                    <span class="icon">✉️</span>
+                    <span>申请友链</span>
+                </a>
+            </div>
+        </div>
+
+        <footer>
+            © 2026 许愿上上签✨ All Rights Reserved
+        </footer>
+    </div>
+
+    <script>
+        // 友链数据配置（可单独控制每个站点的头像显示）
+        const LINKS = [
+            {
+                name: "Fostar's Site",
+                url: "https://fostar.home.kg/",
+                desc: "这里是狼四星的小站w",
+                avatar: "https://picsum.photos/80/80?random=1",
+                showAvatar: false   // true 显示头像，false 隐藏
+            },
+            {
+                name: "欢迎发邮添加A",
+                url: "https://example.com",
+                desc: "这是一段站点描述",
+                avatar: "https://picsum.photos/80/80?random=2",
+                showAvatar: false  // 这个就不显示头像
+            },
+            {
+                name: "欢迎发邮添加B",
+                url: "https://example.com",
+                desc: "这是一段站点描述",
+                avatar: "https://picsum.photos/80/80?random=3",
+                showAvatar: false
+            }
+            // 可以继续添加更多友链
+        ];
+
+        // 邮件配置
+        const MAIL_CONFIG = {
+            to: 'lijackwww@163.com',
+            subject: '发送给许愿上上签的友链申请',
+            body: '你好，\n\n我想申请与贵站交换友链。\n\n站点名称：\n站点链接：\n站点描述：\n站点头像url（如有）：\n\n感谢您的考虑！'
+        };
+
+        // 1. 加载动画控制
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        setTimeout(() => {
+            loadingOverlay.classList.add('fade-out');
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 500);
+        }, 1500);
+
+        // 2. 深色模式切换
+        const darkToggle = document.getElementById('darkToggle');
+        const body = document.body;
+
+        const isDarkMode = localStorage.getItem('linkWallDarkMode') === 'true';
+        if (isDarkMode) {
+            body.classList.add('dark-mode');
+            darkToggle.textContent = '☀️';
+        }
+
+        darkToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            const mode = body.classList.contains('dark-mode');
+            darkToggle.textContent = mode ? '☀️' : '🌙';
+            localStorage.setItem('linkWallDarkMode', mode);
+        });
+
+        // 3. 渲染友链列表
+        function renderLinks() {
+            const wall = document.getElementById('linkWall');
+            wall.innerHTML = ''; // 清空
+            LINKS.forEach(link => {
+                const card = document.createElement('a');
+                card.className = 'link-card';
+                card.href = link.url;
+                card.target = '_blank';
+
+                // 根据 showAvatar 决定是否加入 <img>
+                if (link.showAvatar) {
+                    const img = document.createElement('img');
+                    img.src = link.avatar;
+                    img.alt = '站点头像';
+                    img.className = 'link-avatar';
+                    card.appendChild(img);
+                }
+
+                const h3 = document.createElement('h3');
+                h3.className = 'link-name';
+                h3.textContent = link.name;
+                card.appendChild(h3);
+
+                const p = document.createElement('p');
+                p.className = 'link-desc';
+                p.textContent = link.desc;
+                card.appendChild(p);
+
+                wall.appendChild(card);
+            });
+        }
+
+        // 4. 打开默认邮件客户端
+        function openDefaultMailClient() {
+            const { to, subject, body } = MAIL_CONFIG;
+            const subjectEncoded = encodeURIComponent(subject);
+            const bodyEncoded = encodeURIComponent(body);
+            const mailtoUrl = `mailto:${to}?subject=${subjectEncoded}&body=${bodyEncoded}`;
+            window.location.href = mailtoUrl;
+        }
+
+        // 5. 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            renderLinks();
+        });
+
+        // 6. 绑定按钮事件
+        document.getElementById('applyLinkBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            openDefaultMailClient();
+        });
+
+        // 7. 绑定底部申请友链按钮事件
+        document.getElementById('applyLinkBtnBottom').addEventListener('click', (e) => {
+            e.preventDefault();
+            openDefaultMailClient();
+        });
+    </script>
+</body>
+</html>

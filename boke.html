@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>许愿上上签の文章列表</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Noto Serif SC', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f3f4f6;
+            --text-primary: #111827;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --glass-shadow: rgba(0, 0, 0, 0.05);
+            font-size: 14px
+        }
+        .dark {
+            --bg-primary: #0f0f13;
+            --bg-secondary: #1a1a1f;
+            --text-primary: #f9fafb;
+            --glass-bg: rgba(30, 30, 35, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: rgba(0, 0, 0, 0.3);
+        }
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 24px var(--glass-shadow);
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--glass-shadow);
+        }
+        .article-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px var(--glass-shadow);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: #6366f1;
+            z-index: 9999;
+            transition: width 0.1s linear;
+        }
+        .article-content {
+            font-family: 'Noto Serif SC', serif;
+            line-height: 1.9;
+            font-size: 1.125rem;
+        }
+        .article-content p {
+            margin-bottom: 1.8em;
+            text-align: justify;
+            letter-spacing: 0.02em;
+        }
+        .article-content img {
+            width: 100%;
+            border-radius: 0.75rem;
+            margin: 2rem 0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        .search-input {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        .page-btn {
+            transition: all 0.2s;
+        }
+        .page-btn:hover:not(:disabled) {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: #6366f1;
+        }
+        .page-btn.active {
+            background: #6366f1;
+            color: white;
+        }
+        .copyright-notice {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border-left: 4px solid #6366f1;
+        }
+        .preview-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .article-card:hover .preview-image {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col">
+
+    <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+
+    <nav class="fixed top-0 w-full z-50 glass-panel border-b border-gray-200/10">
+        <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+            <!-- 动态返回按钮 -->
+            <button id="navBackBtn" class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span id="navBackText" class="hidden sm:inline">返回主页</span>
+            </button>
+
+            <div class="flex items-center gap-4">
+                <button onclick="document.getElementById('searchInput')?.focus()" class="p-2 rounded-full hover:bg-gray-100/10 transition-colors text-gray-700 dark:text-gray-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </button>
+
+                <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors" aria-label="切换主题">
+                    <svg id="moonIcon" class="w-5 h-5 text-indigo-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                    </svg>
+                    <svg id="sunIcon" class="w-5 h-5 text-yellow-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main id="app" class="flex-1 container mx-auto px-4 pt-24 pb-16 max-w-6xl"></main>
+
+    <footer class="glass-panel mt-auto py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+        <div class="container mx-auto px-4 space-y-2">
+            <p>© 2026 许愿上上签 (xussq.de5.net). All Rights Reserved.</p>
+            <p class="text-xs">原创内容，未经作者书面授权，禁止任何形式的转载、演绎或用于商业用途。</p>
+        </div>
+    </footer>
+
+    <script>
+        // ==========================================
+        // 【文章数据库区域】
+        // ==========================================
+        
+        const rawArticlesData = `
+■■■■■■■■■■■■■■■ 文章开始 ■■■■■■■■■■■■■■■
+标题：从这里开始，记录存在的痕迹
+简介：说真的，我没想到在这个信息密度极高的时代，我们依然能在互联网的某个角落，发出属于自己的、哪怕极其微小的声音……
+正文：
+这是我的第一篇文字，也是这个空间的起点。首先要感谢 AI 的协助——它承担了大部分基础工作（虽然偶尔需要手动微调，但相比从头开始，效率仍然提升了很剁）。这让我得以在这个世界上拥有了一个真正属于自己的数字居所。
+关于这个阅读系统，我想分享几个点：
+视觉层 —— 采用⚡高级⚡的 CSS 技术实现原生玻璃拟态（咋感觉有点碰瓷某家公司），配合纯白底色与可切换的深色模式，在极简中保留层次与通透感。
+图片：https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEQbippexy2s3X2SDVq36XuUo4tvpukPQACkRkAAiZH2Vemlh81PcRnZjgE.jpg
+注：图片来源于xhs作者Next Vision
+功能层 —— 文章支持可选预览图配置，搜索与分页让内容检索更高效，底部的版权声明则确保我的每一篇原创内容都保有应有的尊重。
+到此，散会！
+发布时间：2025-01-29
+预览图：true
+图片地址：https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEQbftpexjsb7ktqBJtMbTpWNrsgHq3OQACURkAAiZH2VfFkZRSRREzYDgE.jpg
+■■■■■■■■■■■■■■■ 文章结束 ■■■■■■■■■■■■■■■ 
+        `;
+
+        // ==========================================
+        // 【解析器】
+        // ==========================================
+        function parseArticles(rawText) {
+            const articles = [];
+            const blocks = rawText.split(/[■#\-]{10,}\s*文章开始\s*[■#\-]{10,}/);
+            
+            blocks.forEach((block, index) => {
+                if (!block.trim()) return;
+                const content = block.split(/[■#\-]{10,}\s*文章结束\s*[■#\-]{10,}/)[0].trim();
+                if (!content) return;
+                
+                try {
+                    const endMarkers = ['发布时间', '预览图', '图片地址'];
+                    
+                    const article = {
+                        id: 'article-' + Date.now() + '-' + index,
+                        title: extractField(content, '标题'),
+                        summary: extractField(content, '简介'),
+                        content: extractMultilineField(content, '正文', endMarkers),
+                        date: extractField(content, '发布时间'),
+                        hasPreview: extractField(content, '预览图').toLowerCase() === 'true',
+                        previewImage: extractField(content, '图片地址')
+                    };
+                    
+                    if (!article.previewImage) article.hasPreview = false;
+                    if (article.title) articles.push(article);
+                } catch (e) {
+                    console.error('解析文章失败:', e);
+                }
+            });
+            
+            return articles;
+        }
+
+        function extractField(text, fieldName) {
+            const regex = new RegExp(`${fieldName}[：:]\\s*([^\\n]*)(?=\\n|$)`, 'i');
+            const match = text.match(regex);
+            return match ? match[1].trim() : '';
+        }
+
+        function extractMultilineField(text, fieldName, endMarkers) {
+            const pattern = endMarkers.map(f => f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+            const regex = new RegExp(`${fieldName}[：:]\\s*([\\s\\S]*?)(?=(?:${pattern})[：:]|$)`, 'i');
+            const match = text.match(regex);
+            return match ? match[1].trim() : '';
+        }
+
+        const articles = parseArticles(rawArticlesData);
+
+        // ==========================================
+        // 【应用逻辑】
+        // ==========================================
+        let currentPage = 1;
+        const itemsPerPage = 6;
+        let currentSearch = '';
+        let filteredArticles = [...articles];
+
+        // 更新导航栏按钮
+        function updateNavButton(mode) {
+            const btn = document.getElementById('navBackBtn');
+            const text = document.getElementById('navBackText');
+            
+            if (mode === 'home') {
+                // 文章列表页：返回主页
+                text.textContent = '返回主页';
+                btn.onclick = () => window.location.href = 'https://xussq.de5.net';
+            } else {
+                // 文章详情页：返回列表
+                text.textContent = '返回列表';
+                btn.onclick = () => window.location.hash = '';
+            }
+        }
+
+        function updateThemeIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('moonIcon').classList.toggle('hidden', isDark);
+            document.getElementById('sunIcon').classList.toggle('hidden', !isDark);
+        }
+
+        function initTheme() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+            updateThemeIcon();
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            updateThemeIcon();
+        }
+
+        function handleSearch(keyword) {
+            currentSearch = keyword.toLowerCase().trim();
+            currentPage = 1;
+            
+            if (!currentSearch) {
+                filteredArticles = [...articles];
+            } else {
+                filteredArticles = articles.filter(article => 
+                    article.title.toLowerCase().includes(currentSearch) || 
+                    article.summary.toLowerCase().includes(currentSearch) ||
+                    article.content.toLowerCase().includes(currentSearch)
+                );
+            }
+            
+            renderHome();
+        }
+
+        function getPagination() {
+            const totalPages = Math.ceil(filteredArticles.length / itemsPerPage);
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            return { totalPages, pageArticles: filteredArticles.slice(start, end), start, end };
+        }
+
+        function changePage(page) {
+            const { totalPages } = getPagination();
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderHome();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        const app = document.getElementById('app');
+
+        function renderHome() {
+            document.title = '文章列表 | 许愿上上签';
+            updateNavButton('home'); // 设置为返回主页
+            
+            const { totalPages, pageArticles, start, end } = getPagination();
+            
+            let html = `
+                <div class="text-center mb-12 space-y-6">
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">文章列表</h1>
+                    <p class="text-gray-600 dark:text-gray-400 text-lg">探索技术、设计与思考</p>
+                    
+                    <div class="max-w-md mx-auto relative">
+                        <input type="text" id="searchInput" placeholder="搜索文章..." value="${currentSearch}"
+                            oninput="handleSearch(this.value)" class="search-input w-full px-5 py-3 rounded-full pl-12">
+                        <svg class="absolute left-4 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="text-sm text-gray-500">共 ${filteredArticles.length} 篇文章</div>
+                </div>
+
+                ${pageArticles.length > 0 ? `<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">` : 
+                `<div class="text-center py-20 text-gray-500"><p>没有找到相关文章</p></div>`}
+            `;
+            
+            pageArticles.forEach(article => {
+                html += `
+                    <article class="article-card glass-card rounded-2xl overflow-hidden cursor-pointer group flex flex-col h-full transition-all" 
+                             onclick="window.location.hash='#/article/${article.id}'">
+                        ${article.hasPreview && article.previewImage ? `
+                            <div class="relative overflow-hidden h-48 bg-gray-200 dark:bg-gray-800">
+                                <img src="${article.previewImage}" alt="${article.title}" class="preview-image">
+                            </div>
+                        ` : ''}
+                        <div class="p-6 flex-1 flex flex-col">
+                            <div class="flex items-center gap-2 mb-3 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                ${article.date}
+                            </div>
+                            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                                ${article.title}
+                            </h2>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm line-clamp-3 leading-relaxed flex-1">
+                                ${article.summary}
+                            </p>
+                            <div class="mt-4 flex items-center text-indigo-600 dark:text-indigo-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                                阅读全文<svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                        </div>
+                    </article>
+                `;
+            });
+            
+            if (pageArticles.length > 0) html += '</div>';
+            
+            if (totalPages > 1) {
+                html += `
+                    <div class="flex justify-center items-center gap-2 mt-8">
+                        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}
+                            class="page-btn glass-panel px-4 py-2 rounded-lg disabled:opacity-50 text-sm text-gray-700 dark:text-gray-300">上一页</button>
+                        <div class="flex gap-1">
+                            ${Array.from({length: totalPages}, (_, i) => i + 1).map(page => `
+                                <button onclick="changePage(${page})" class="page-btn glass-panel w-10 h-10 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 ${page === currentPage ? 'active' : ''}">${page}</button>
+                            `).join('')}
+                        </div>
+                        <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}
+                            class="page-btn glass-panel px-4 py-2 rounded-lg disabled:opacity-50 text-sm text-gray-700 dark:text-gray-300">下一页</button>
+                    </div>
+                `;
+            }
+            
+            app.innerHTML = html;
+            document.getElementById('progressBar').style.width = '0%';
+        }
+
+        function renderArticle(id) {
+            const article = articles.find(a => a.id === id);
+            if (!article) { renderHome(); return; }
+
+            document.title = `${article.title} | 许愿上上签`;
+            updateNavButton('list'); // 设置为返回列表
+            
+            const contentHtml = article.content.split('\n')
+                .map(line => {
+                    const trimmed = line.trim();
+                    if (trimmed.match(/^图片[：:]/)) {
+                        const imgUrl = trimmed.replace(/^图片[：:]\s*/, '').trim();
+                        return imgUrl ? `<img src="${imgUrl}" alt="文章插图" loading="lazy">` : '';
+                    }
+                    if (!trimmed) return '';
+                    return `<p>${trimmed}</p>`;
+                })
+                .filter(html => html !== '')
+                .join('');
+            
+            const finalContent = contentHtml || `<p>${article.content}</p>`;
+            
+            let html = `
+                <article class="glass-card rounded-3xl p-8 md:p-16 max-w-4xl mx-auto">
+                    ${article.hasPreview && article.previewImage ? `
+                        <div class="mb-10 rounded-2xl overflow-hidden shadow-lg">
+                            <img src="${article.previewImage}" alt="${article.title}" class="w-full h-64 md:h-80 object-cover">
+                        </div>
+                    ` : ''}
+                    
+                    <header class="mb-10 border-b border-gray-200 dark:border-gray-700/50 pb-8">
+                        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6 font-serif leading-tight">${article.title}</h1>
+                        <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                            <span class="glass-panel px-3 py-1 rounded-full flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                ${article.date}
+                            </span>
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                ${article.content.length} 字
+                            </span>
+                        </div>
+                    </header>
+                    
+                    <div class="article-content text-gray-800 dark:text-gray-200">
+                        ${finalContent}
+                    </div>
+                    
+                    <div class="copyright-notice mt-12 p-6 rounded-xl">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                                <h3 class="font-bold text-gray-900 dark:text-white">版权声明</h3>
+                                <p>本文由 <strong>许愿上上签 (xussq.de5.net)</strong> 原创出品，保留所有权利。</p>
+                                <p>未经作者书面授权，禁止任何形式的转载、摘编、复制、演绎或用于商业用途。</p>
+                                <p class="text-xs text-gray-500 mt-2">© ${new Date().getFullYear()} 许愿上上签. All Rights Reserved.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700/50 flex justify-between items-center">
+                        <button onclick="window.location.hash=''" class="glass-panel px-6 py-3 rounded-full text-sm hover:bg-gray-100/50 transition-colors flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                            返回文章列表
+                        </button>
+                    </div>
+                </article>
+            `;
+            
+            app.innerHTML = html;
+            
+            const progressBar = document.getElementById('progressBar');
+            const handler = () => {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                progressBar.style.width = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 + '%' : '0%';
+            };
+            window.removeEventListener('scroll', handler);
+            window.addEventListener('scroll', handler);
+            handler();
+        }
+
+        function handleRoute() {
+            const hash = window.location.hash;
+            if (hash.startsWith('#/article/')) renderArticle(hash.split('/')[2]);
+            else renderHome();
+        }
+
+        window.addEventListener('hashchange', handleRoute);
+        window.addEventListener('load', () => { initTheme(); handleRoute(); });
+    </script>
+</body>
+</html>
